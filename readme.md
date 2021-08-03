@@ -1,8 +1,8 @@
-Для запуска
+Для запуска примера
 
 ```
-npm i -g ts-node
-npm i
+git clone git@github.com:massa-org/hlel.git && cd hlel
+npm i -g ts-node && npm i
 npm run example
 ```
 

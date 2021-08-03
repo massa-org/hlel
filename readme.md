@@ -17,3 +17,11 @@ app.run();
 // return object from page with infered types
 app.get("http://site.name.com/2");
 ```
+
+Для запуска
+
+```
+npm i -g ts-node
+npm i
+npm run example
+```

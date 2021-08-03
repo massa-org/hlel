@@ -1,5 +1,6 @@
 import { CheerioAPI } from "cheerio";
 import { Fn } from "../util/fn_types";
+import { load } from ".pnpm/cheerio@1.0.0-rc.10/node_modules/cheerio";
 
 export type ElementData = {
 	href?: string;
@@ -8,9 +9,13 @@ export type ElementData = {
 	text: string;
 };
 
-function valueParser<T>(selector: string, transformer: Fn<ElementData[], T>) {
-	return async ($: CheerioAPI): Promise<T> =>
-		transformer(
+export function valueParser<T>(
+	selector: string,
+	transformer: Fn<ElementData[], T>
+) {
+	return async (html: string): Promise<T> => {
+		const $ = load(html);
+		return transformer(
 			$(selector)
 				.map(function () {
 					const href = $(this).attr().href;
@@ -22,6 +27,7 @@ function valueParser<T>(selector: string, transformer: Fn<ElementData[], T>) {
 				})
 				.toArray()
 		);
+	};
 }
 
 export function _<T>(fn: Fn<ElementData[], T>) {
@@ -33,10 +39,10 @@ export type ParserConfig = Record<
 >;
 
 export function objectParser<T extends ParserConfig>(config: T) {
-	return async ($: CheerioAPI) => {
+	return async (html: string) => {
 		const ret: any = {};
 		const pms = Object.keys(config).map(async (key) => {
-			ret[key] = await valueParser(...config[key])($);
+			ret[key] = await valueParser(...config[key])(html);
 		});
 		await Promise.all(pms);
 		return ret as _optType<T>;

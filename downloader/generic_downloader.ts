@@ -11,6 +11,7 @@ export type TypedUrl = { url: string; kind: string } | string;
 
 export type pageProcessorConfig<T, Url extends TypedUrl> = {
 	processPageFn: { (page: puppeteer.Page, kind?: string): Promise<T[]> };
+	urlExtractorFn?: { (page: puppeteer.Page, kind?: string): Promise<Url[]> };
 	queue: URLQueue<Url>;
 	sleepTime?: Fn<string, number>;
 	errorReporter?: Fn<[string, string], Promise<void>>;
@@ -53,7 +54,16 @@ export async function* pageProcessor<T, Url extends TypedUrl>(
 				else currentUrl = (curl as any).url;
 				currentUrl = currentUrl!;
 
+				console.log(`run: download page ${currentUrl}`);
 				await page.goto(currentUrl);
+
+				if (config.urlExtractorFn) {
+					const nextUrls = await config.urlExtractorFn(
+						page,
+						(curl as any).kind
+					);
+					for (const u of nextUrls) await config.queue.add(u);
+				}
 
 				yield* await config.processPageFn(page, (curl as any).kind);
 

@@ -1,15 +1,16 @@
+import { Page } from "puppeteer";
+import { mergeMap } from "rxjs";
 import { Extractors } from "./downloader/extractors";
 import { pageProcessor } from "./downloader/generic_downloader";
 import { URLQueue } from "./downloader/url_queue";
 import { objectParser, ParserConfig, valueParser } from "./transformer/parser";
-import { Page } from "puppeteer";
 import { Fn } from "./util/fn_types";
 
-async function* simplePageProcessor(
+async function simplePageProcessor(
 	queue: string[],
 	elementSelector: string,
 	nextUrlSelector?: string,
-	nextUrlHost?: string
+	nextUrlHost?: string,
 ) {
 	let cnt = 0;
 	const opts: { urlExtractorFn?: Fn<Page, Promise<string[]>> } = {};
@@ -26,7 +27,7 @@ async function* simplePageProcessor(
 		};
 	}
 
-	yield* pageProcessor({
+	return pageProcessor({
 		processPageFn: Extractors.domElements(elementSelector),
 		queue: new URLQueue<string>(queue),
 		errorReporter: async ([err, image]) => console.log(err),
@@ -35,22 +36,20 @@ async function* simplePageProcessor(
 }
 
 // high level extraction library
-export async function* hlel<Config extends ParserConfig>(
+export async function hlel<Config extends ParserConfig>(
 	queue: string[] | string,
 	elementSelector: string,
 	parserConfig: Config,
 	nextUrlSelector?: string,
-	nextUrlHost?: string
+	nextUrlHost?: string,
 ) {
 	if (!Array.isArray(queue)) queue = [queue];
-	const sqd = simplePageProcessor(
+	const sqd = await simplePageProcessor(
 		queue,
 		elementSelector,
 		nextUrlSelector,
-		nextUrlHost
+		nextUrlHost,
 	);
 	const parser = objectParser(parserConfig);
-	for await (const d of sqd) {
-		yield await parser(d);
-	}
+	return sqd.pipe(mergeMap(parser));
 }

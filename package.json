@@ -26,7 +26,8 @@
     "progress": "^2.0.3",
     "puppeteer": "^9.1.1",
     "rimraf": "^3.0.2",
-    "rxjs": "^7.4.0"
+    "rxjs": "^7.4.0",
+    "tmp-promise": "^3.0.2"
   },
   "devDependencies": {
     "@types/md5": "^2.3.1",

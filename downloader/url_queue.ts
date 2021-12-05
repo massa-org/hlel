@@ -11,6 +11,7 @@ export class URLQueue<T> {
 		if (this.toProcess.length == 0) return undefined;
 		const [first, ...rest] = this.toProcess;
 		this.toProcess = rest;
+
 		return first;
 	}
 	async add(url: T): Promise<void> {
